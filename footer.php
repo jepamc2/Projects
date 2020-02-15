@@ -1,8 +1,12 @@
-</main>
-</article>
-<footer>
-    <?php echo "<p>&copy Group 4 - The Timmonators <br></p>"; 
-	echo date('M d, Y \a\\t h:i:s A'); ?>
+<footer class="footer">
+<div class="footerLeft">
+<img src="img/logo.png" alt="Logo">
+</div>
+<div class="footerRight">
+<img src="img/Sweetgrass_facebook-01.png" alt="Logo">
+<img src="img/Sweetgrass_instagram-01.png" alt="Logo">
+<img src="img/Sweetgrass_twitter-01.png" alt="Logo">
+</div>
 </footer>
 </body>
 </html>

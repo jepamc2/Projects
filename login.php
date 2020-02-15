@@ -1,17 +1,20 @@
 <?php
 //Developer(s): Joshua Mercer
 //Date: 3/9/2017
-//Purpose: This is a login form for the back end of the system
+//Purpose: This is a login form for the front end of the system
 
 $pagetitle = "Login Confirmation"; //sets the name of the page
 require_once 'header.php'; //requires an instance of the header file
 require_once 'connect.php'; //requires a connection from the database
 
-if(isset($_SESSION['staffloginid'])) //if the user is already logged in
+echo '<div class=paper>';
+echo '<center>';
+echo '<br><br><br><br><br><br><br>';
+if(isset($_SESSION['custloginid'])) //if the user is already logged in
 {
-    echo "<p class='error'>You are already logged in.</p>"; //this will output the user has already logged in
+    echo "<h4 class='error'>You are already logged in.</h4>"; //this will output the user has already logged in
     include_once 'footer.php'; //include the footer file (if not there will not cause errors)
-    exit(); //exit
+    exit(); //exit 
 }
 //declare variables
 $showform = 1; //this allows the input fields to be shown until the user is logged in
@@ -19,22 +22,22 @@ $errormsg = ''; //set the error message string to empty
 
 if(isset ($_POST['submit'])) { //when the user hits the submit button
 	
-	$formfield['ffuname'] = strtolower(trim($_POST['uname'])); //this trims the and converts the users email to lowercase
+	$formfield['ffemail'] = strtolower(trim($_POST['email'])); //this trims the and converts the users email to lowercase
 	$formfield['ffpassword'] = trim($_POST['password']); 
 	
-	if(empty($formfield['ffuname'])) { $errormsg .= '<p>USERNAME IS MISSING</p>';} //if fields are empty concatenate onto the error message string
-	if(empty($formfield['ffpassword'])) { $errormsg .= '<p>PASSWORD IS MISSING</p>';} //if fields are empty concatenate onto the error message string
+	if(empty($formfield['ffemail'])) { $errormsg .= '<h4>EMAIL IS MISSING</h4>';} //if fields are empty concatenate onto the error message string
+	if(empty($formfield['ffpassword'])) { $errormsg .= '<h4>PASSWORD IS MISSING</h4>';} //if fields are empty concatenate onto the error message string
 	
 	if($errormsg != '') { //if the error message string isn't empty
-		echo "<p>THERE ARE ERRORS</p>" . $errormsg; //output error
+		echo "<h4>THERE ARE ERRORS</h4>" . $errormsg; //output error
 	}
 	else //if there are no errors
 	{
 		try 
 		{
-			$sql = 'SELECT * FROM staff WHERE dbstaffusername = :bvuname'; //connect to database and get all info connected to the email entered
+			$sql = 'SELECT * FROM customers WHERE dbcustemail = :bvemail'; //connect to database and get all info connected to the email entered
 			$s = $db->prepare($sql); //prepare your SQL statement 
-			$s->bindValue(':bvuname', $formfield['ffuname']); //bind value for prepared statement to what the user has entered for email
+			$s->bindValue(':bvemail', $formfield['ffemail']); //bind value for prepared statement to what the user has entered for email
 			$s->execute(); //execute the prepared statement 
 			$count = $s->rowCount(); //count the returned information
 		}
@@ -46,57 +49,62 @@ if(isset ($_POST['submit'])) { //when the user hits the submit button
 		
 		if($count < 1) //if the count of the returned information is less than one, that means there is no info connected to the email entered
 		{
-			echo '<p>The email or password is incorrect</p>'; //print error
+			echo '<h4>The email or password is incorrect</h4>'; //print error
 		}
 		else 
 		{
 			$row = $s->fetch(); //fetch all data from the database 
-
-			$confirmedpw = $row['dbstaffpassword']; //get users password
+			$confirmeduname = $row['dbcustemail']; //get users email
+			$confirmedpw = $row['dbcustpassword']; //get users password
 			
 			if (password_verify($formfield['ffpassword'], $confirmedpw)) //if users password matches one entered into form
 			{
-				$_SESSION['staffloginid']= $row['dbstaffid']; //set session variables for the staff id
-                $_SESSION['staffloginname'] = $row['dbstafffname']; //set session variables for the staff first name
-				$_SESSION['staffloginpermit'] = $row['dbpermitid'];  //set session variables for the staff permissions
-				$_SESSION['stafflocid'] = $row['dblocid'];  //set session variables for the staff location
-				$_SESSION['staffemployed'] = $row['dbstaffemployed'];  //set session variables for the staff empolyed status
+				$_SESSION['custloginid']= $row['dbcustid']; //set session variables for the customers id
+                $_SESSION['custloginname'] = $row['dbcustfirstname'];  //set session variables for the customers first name
+				$_SESSION['custloginpermit'] = $row['dbpermitid'];  //set session variables for the customers permissions
+				$_SESSION['custemailconfirm'] = $row['dbcustemailconfirm'];
 				$showform = 0; //hide the form field information
 				echo "<br>"; 
                 echo "Logged In Successfully"; //tell user that login was su
 				echo "<br><br>";
+				//echo '<a href = "index.php">Continue</a>'; //allow user to continue to homepage
+				//header("Location: index.php"); //redirect to set URL
 				echo '<script>window.location = "index.php";</script>'; //redirect to set URL
 				echo "<br>";
 			} 
 			else
 			{
-				echo '<p>The emails or password is incorrect</p>'; //if password incorrect throw ambiguous incorrect error
+				echo '<h4>The emails or password is incorrect</h4>'; //if password incorrect throw ambiguous incorrect error
 			}
 		}
 	}
 }
-if($showform == 1) //if  user hasn't logged in
+if($showform == 1) //if  user hasnt logged in
 {
 //HTML below is the login form
-?>
+?>	
 
-<p>You are not logged in.  Please log in</p>
-
+<center>
+<h4>You are not logged in.  Please log in</h4>
+<br><br>
 <form name = "loginForm" id = "loginForm" method = "post" action = "login.php">
 	<table>
 		<tr>
-			<td>Username</td>
-			<td><input type="text" name="uname" id = "uname" required></td>
+			<td  class="logintable">Email</td>
+			<td class="logintable"><input type="text" class="logintable" name="email" id = "email" required></td>
 		</tr><tr>	
-			<td>Password</td>	
-			<td><input type="password" name="password" id = "password" required></td>
-		</tr><tr>	
-			<td>Submit:</td>
-			<td><input type ="submit" class="button" name= "submit" value = "submit"></td>
+			<td  class="logintable">Password</td>	
+			<td class="logintable"><input type="password" class="logintable" name="password" id = "password" required></td>
+		</tr><tr>
+			<td colspan="2"  class="logintable"><input type ="submit" name= "submit" value = "Log In" class="button"></td>
 		</tr>
 	</table>
-</form>
+</form><br><br>
 <?php
+echo "<h5><a href='register.php'>Sign Up</a><h5>";
+echo '<br>';
+echo "<h5><a href='passwordreset.php'>Forgot Password?</a><h5>";
+echo '</div>';
 } //close if statement
 include_once 'footer.php'; //try to include footed
 ?>

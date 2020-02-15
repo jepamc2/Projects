@@ -9,7 +9,7 @@ session_start();
     <link rel="stylesheet" href="css\SouthernBistro.css" />
 </head>
 <body>
-<div class="header">
+<div class="aboutheader">
 
 <nav>
     <?php include_once "Navigation.php";?>

@@ -7,7 +7,7 @@ $pagetitle = "Reset Password";
 require_once 'header.php'; //header
 require_once "connect.php"; //connection
 $showform = 0;
-$URL = 'http://groupc18.istwebclass.org/Group4_V4';
+$URL = 'http://groupc18.istwebclass.org/Group4_V5';
 //use namespace from PHP Mailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -15,6 +15,10 @@ use PHPMailer\PHPMailer\Exception;
 require 'PHPMailer/src/Exception.php';
 require 'PHPMailer/src/PHPMailer.php';
 require 'PHPMailer/src/SMTP.php';	
+
+	echo '<div class="bigpaper">';
+	echo '<center>';
+	echo '<br><br><br><br>';
 
 	if (!isset($_GET['email']) || !isset($_GET['token'])){ //make sure token and email are passed
 		$showform = 0;	
@@ -35,19 +39,22 @@ require 'PHPMailer/src/SMTP.php';
 		//if passwords dont match
 		if($formfield['ffpass'] != $formfield['ffpass2']){$errormsg .= "<p>Your passwords do not match.</p>";}
 		
-		$lowercase = preg_match('@[a-z]@',$formfield['pass']); //checking for any lowercase values
-		$uppercase = preg_match('@[A-Z]@',$formfield['pass']); //checking for any uppercase values
-		$numeric = preg_match('@[0-9]@',$formfield['pass']); //checking for any numeric values
-		$specialchars = preg_match('@[/W]@',$formfield['pass']); //checking for any non-alphanumeric values
+			//PASSWORD POLICY
+			$lowercase = preg_match('@[a-z]@',$formfield['ffpass']); //checking for any lowercase values
+			$uppercase = preg_match('@[A-Z]@',$formfield['ffpass']); //checking for any uppercase values
+			$numeric = preg_match('@[0-9]@',$formfield['ffpass']); //checking for any numeric values
+			$specialchars = preg_match('@[^\w\s]@',$formfield['ffpass']); //checking for any non-alphanumeric values
+			if (!$lowercase || !$uppercase || !$numeric || !$specialchars || strlen($formfield['ffpass']) < 8){
+				//print error particular to false return
+				if (!$lowercase){$errormsg .= '<p>Password must contain at least one lower-case letter.</p>';}
+				if (!$uppercase){$errormsg .= '<p>Password must contain at least one upper-case letter.</p>';}
+				if (!$numeric){$errormsg .= '<p>Password must contain at least one numeric character.</p>';}
+				if (!$specialchars){$errormsg .= '<p>Password must contain at least one special character.</p>';}
+				if (strlen($formfield['ffpass']) < 8){$errormsg .= '<p>Password must contain at least 8 characters long.</p>';}
+			}
 
-		if (!$lowercase || !$uppercase || !$numeric || !$specialchars || strlen($formfield['pass']) > 8){
-			//print error particular to false return
-			if (!$lowercase){$errormsg .= '<p>Password must contain at least one lower-case letter.</p>'};
-			if (!$uppercase){$errormsg .= '<p>Password must contain at least one upper-case letter.</p>'};
-			if (!$numeric){$errormsg .= '<p>Password must contain at least one numeric character.</p>'};
-			if (!$specialchars){$errormsg .= '<p>Password must contain at least one special character.</p>'};
-			if (strlen($formfield['pass']) > 8){$errormsg .= '<p>Password must contain at least 8 characters long.</p>'};
-		}
+		echo $errormsg;
+			
 		if($errormsg != ""){
 				echo $errormsg;
 			}else{
@@ -58,14 +65,14 @@ require 'PHPMailer/src/SMTP.php';
 				$encpass = password_hash($formfield['ffpass'], PASSWORD_BCRYPT, $options);
 				try{
 					//select from database where url values match database information
-					$sqlchecktoken = "SELECT * FROM staff WHERE dbstaffemail = :bvemail AND dbstafftoken = :bvtoken"; //sql query
+					$sqlchecktoken = "SELECT * FROM customers WHERE dbcustemail = :bvemail AND dbcusttoken = :bvtoken"; //sql query
 					$stmtchecktoken = $db->prepare($sqlchecktoken); //prepare statement
 					$stmtchecktoken->bindValue(':bvemail', $emailaddress); //bind email to value
 					$stmtchecktoken->bindValue(':bvtoken', $token);//bind email to value
 					$stmtchecktoken->execute(); //execute statement
 					$count = $stmtchecktoken->rowCount();
 					if ($count > 0){
-					$sqlupdateconfirm = "UPDATE staff SET dbstafftoken = '' , dbstaffpassword = :bvpass WHERE dbstaffemail = :bvemail";
+					$sqlupdateconfirm = "UPDATE customers SET dbcusttoken = '' , dbcustpassword = :bvpass WHERE dbcustemail = :bvemail";
 					$stmtupdateconfirm = $db->prepare($sqlupdateconfirm); //prepare statement
 					$stmtupdateconfirm->bindValue(':bvemail', $emailaddress); //bind email to value
 					$stmtupdateconfirm->bindValue(':bvpassword', $encpass); //bind password to value
@@ -93,7 +100,7 @@ require 'PHPMailer/src/SMTP.php';
 		}else{
 			//VALIDATE THE EMAIL
 			try{ //checking to see if email exists in database
-				$sqlemailcheck ='SELECT * from staff WHERE dbstaffemail = :bvstaffcheck'; //SQL query
+				$sqlemailcheck ='SELECT * from customers WHERE dbcustemail = :bvemailcheck'; //SQL query
 				$stmtemailcheck = $db->prepare($sqlemailcheck); //preparing statement
 				$stmtemailcheck->bindValue(':bvemailcheck', $formfield['ffemail']);
 				$stmtemailcheck->execute(); //executing prepared statements
@@ -128,9 +135,9 @@ require 'PHPMailer/src/SMTP.php';
 					$mail->AltBody = $URL.'/passwordreset.php?email='.$email.'&token='.$passtoken;//alt body
 					$mail->send(); //send email
 					if (!$mail->send()){ //check to see if email has sent
-						echo "Error! Please try again!";
+						echo "<p>Error! Please try again!</p>";
 					}else{
-						echo "You have been a Reset Password email!";
+						echo "<h5>You have been a Reset Password email!</h5>";
 					}
 				}catch (Exception $e) {echo $e->errorMessage();} //throw exception error
 				
@@ -148,10 +155,6 @@ require 'PHPMailer/src/SMTP.php';
 	if ($showform == 0){
 ?>
 			<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" name="form">
-			<fieldset>
-				<legend>
-					Customer Email
-				</legend>
 				<table>
 					<tr>
 						<th><label for="email">Email:</label></th>
@@ -159,19 +162,17 @@ require 'PHPMailer/src/SMTP.php';
 					</tr>
 					<tr>
 						<th>Submit:</th>
-						<td><input type="submit" name="sendsubmit" value="SUBMIT"/></td>
+						<td><input type="submit" name="sendsubmit" value="SUBMIT" class="button"/></td>
 					</tr>
 				</table>
 			</fieldset>
 		</form>
+		<br><br>
 <?php
 }else if ($showform == 1){
 ?>
 		<form method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>" name="form">
 			<fieldset>
-				<legend>
-					Reset Password
-				</legend>
 				<table>
 					<tr>
 						<th><label for="pass">Password:</label></th>
@@ -183,16 +184,20 @@ require 'PHPMailer/src/SMTP.php';
 					</tr>
 					<tr>
 						<th>Submit:</th>
-						<td><input type="submit" name="updatesubmit" value="SUBMIT"/></td>
+						<td><input type="submit" name="updatesubmit" value="Reset Password"/></td>
 					</tr>
 				</table>
 			</fieldset>
 		</form>
+		<br><br>
 <?php
 }else if ($showform == 2){
 ?>
 
 <?php
+		echo '<br><br><br><br>';
+		echo '</center>';
+		echo '</div>';
 }
 include_once 'footer.php';
 ?>

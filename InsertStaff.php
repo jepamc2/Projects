@@ -9,8 +9,7 @@ require_once 'connect.php';
 
 $errormsg = "";
 $showform = 1;
-
-$allowedperms = array(13,1); //allowed permissions for this page
+	
 $formfield['fflocation'] = $_SESSION['stafflocid'];
 	
 $sqlselectpos = "SELECT * from permit WHERE dblocid = :bvlocation";
@@ -68,6 +67,15 @@ $resultpos->execute();
 			{
 				$errormsg .= "<p>Your passwords do not match.</p>";
 			}
+			$sqlemailcheck ='SELECT * from staff WHERE dbstaffemail = :bvemailcheck'; //SQL query
+					$stmtemailcheck = $db->prepare($sqlemailcheck); //preparing statement
+					$stmtemailcheck->bindValue(':bvemailcheck', $formfield['ffstaffemail']);
+					$stmtemailcheck->execute(); //executing prepared statements
+					$count = $stmtemailcheck->rowCount();
+					
+					if ($count > 0){ //counting rows in database where email exists
+					$errormsg .= "<p>Email already exist!</p>";
+					}
 			/*  ****************************************************************************
 			DISPLAY ERRORS
 			If we have concatenated the error message with details, then let the user know
@@ -103,6 +111,8 @@ $resultpos->execute();
 					} else {
 						$finalstaffusername = $basestaffusername;
 					}
+					
+					
 				
 
 				
@@ -150,7 +160,7 @@ $resultpos->execute();
 	$result->bindValue(':bvlocation', $formfield['fflocation']);
 	$result->execute();
 
-if(in_array($_SESSION['staffloginpermit'], $allowedperms))
+if($_SESSION['staffloginpermit'] == 1)
 	{
 /**
  * States Dropdown 
@@ -368,7 +378,32 @@ function check_select($i,$m,$e=true) {
 		</form>
 			<br><br>
 	<table border>
-
+	<tr>
+		<th>First Name</th>
+		<th>Last Name</th>
+		<th>Job Title</th>
+		<th>Phone Number</th>
+		<th>Email</th>
+		<th>Address</th>
+		<th>City</th>
+		<th>State</th>
+		<th>Zip</th>
+		<th>Birth Date</th>
+		<th>Hire Date</th>
+		<th>Emergency Contact</th>
+		<th>Emergency Phone</th>
+		<th>Pay Rate</th>
+	</tr>
+	<?php 
+		while ( $row = $result-> fetch() )
+			{
+				echo '<tr><td>' . $row['dbstafffname'] . '</td><td> ' . $row['dbstafflname'] . 
+				'</td><td> ' . $row['dbpermitid'] . 
+				'</td><td> ' . $row['dbstaffphone'] .  '</td><td> ' . $row['dbstaffemail'] .
+				'</td><td> ' . $row['dbstaffstreet'] . '</td><td>' . $row['dbstaffcity'] . '</td><td>' . $row['dbstaffstate'] . '</td><td>' . $row['dbstaffzip'] . '</td><td>' . $row['dbstaffDOB'] . '</td><td>' . $row['dbstaffhiredate'] . '</td><td>' . $row['dbstaffemcontact'] . '</td><td>' . $row['dbstaffemphone'] . '</td><td>' . $row['dbstaffrate'] . '</td></tr>';
+			}
+	?>
+	</table>
 <?php
 	}	
 include_once 'footer.php'
